@@ -1,0 +1,7 @@
+h5py
+visdom
+torch
+torchvision
+numpy
+pandas
+nltk
