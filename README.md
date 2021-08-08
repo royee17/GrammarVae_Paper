@@ -18,7 +18,7 @@ attributes:
 * `--model_name` % model name
 
 Example:
-* `python grammar_vae.py --latent_dim=56 --epochs=50` % train a model with a 56D latent space and 50 epochs 
+* `python grammar_vae.py --latent_dim=56 --epochs=50` % train a model with a 56D latent space and 50 epochs
 
 To compute the model results:
 
@@ -38,6 +38,3 @@ and run:
 
 and run:
 * `python get_final_results.py`
-
-and:
-* `./get_average_test_RMSE_LL.sh`
