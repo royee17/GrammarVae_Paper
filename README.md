@@ -20,7 +20,13 @@ attributes:
 Example:
 * `python grammar_vae.py --latent_dim=56 --epochs=50` % train a model with a 56D latent space and 50 epochs
 
+
 To compute the model results:
+
+Go to Theano-master and run:
+* `python setup.py install`
+
+The experiments with molecules require the rdkit library, which can be installed as described in http://www.rdkit.org/docs/Install.html.
 
 1 - To generate the latent representations, go to:
 
