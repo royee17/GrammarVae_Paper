@@ -21,10 +21,9 @@ def get_arguments():
 def func(x):
     return 1/3 + x + math.sin(x * x)
 
-
 if __name__ == '__main__':
 
-    # We load the smiles data
+    # We load the data
     fname = '../../data/equation2_15_dataset.txt'
 
     args = get_arguments()

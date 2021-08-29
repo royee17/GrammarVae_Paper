@@ -6,12 +6,12 @@ import grammar_models
 
 
 def grammar_loader():
-    with h5py.File('data/eq2_grammar_dataset.h5', 'r') as h5f:
+    with h5py.File('data/eq_grammar_dataset.h5', 'r') as h5f:
         return h5f['data'][:]
 
 
 def str_loader():
-    with h5py.File('data/eq2_str_dataset.h5', 'r') as h5f:
+    with h5py.File('data/eq_str_dataset.h5', 'r') as h5f:
         return h5f['data'][:]
 
 
