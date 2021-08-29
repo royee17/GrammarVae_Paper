@@ -35,8 +35,10 @@ The experiments with molecules require the rdkit library, which can be installed
 and run:
 * `python generate_latent_features_and_targets.py`
 
-2 - For each of the simulation directories (1-10) run:
-* `python run_bo.py`
+2 - To run all simulations go to:
+`equation_optimization/`
+and run:
+* `python run_all_simulations.py`
 
 3 - Extract the final results by going to:
 
