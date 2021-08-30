@@ -45,17 +45,17 @@ class Decoder(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, k1=2, k2=3, k3=4, hidden_n=100):
+    def __init__(self, k1=2, k2=3, k3=4, hidden_n=100, channels=12, linear_mult=9):
         super(Encoder, self).__init__()
 
-        self.conv_1 = nn.Conv1d(in_channels=12, out_channels=12, kernel_size=k1, groups=12)
-        self.bn_1 = nn.BatchNorm1d(12)
-        self.conv_2 = nn.Conv1d(in_channels=12, out_channels=12, kernel_size=k2, groups=12)
-        self.bn_2 = nn.BatchNorm1d(12)
-        self.conv_3 = nn.Conv1d(in_channels=12, out_channels=12, kernel_size=k3, groups=12)
-        self.bn_3 = nn.BatchNorm1d(12)
+        self.conv_1 = nn.Conv1d(in_channels=channels, out_channels=channels, kernel_size=k1, groups=channels)
+        self.bn_1 = nn.BatchNorm1d(channels)
+        self.conv_2 = nn.Conv1d(in_channels=channels, out_channels=channels, kernel_size=k2, groups=channels)
+        self.bn_2 = nn.BatchNorm1d(channels)
+        self.conv_3 = nn.Conv1d(in_channels=channels, out_channels=channels, kernel_size=k3, groups=channels)
+        self.bn_3 = nn.BatchNorm1d(channels)
 
-        self.fc_0 = nn.Linear(12 * 9, hidden_n)
+        self.fc_0 = nn.Linear(channels * linear_mult, hidden_n)
         self.fc_mu = nn.Linear(hidden_n, hidden_n)
         self.fc_var = nn.Linear(hidden_n, hidden_n)
 
@@ -146,12 +146,15 @@ class GrammarVariationalAutoEncoder(nn.Module):
         super(GrammarVariationalAutoEncoder, self).__init__()
         if rules is None:
             rules = []
-        if model_name == 'eq_grammar':
-            self.encoder = Encoder()
-            self.decoder = Decoder()
-        elif model_name == 'zinc_grammar':
+        if model_name == 'zinc_grammar':
             self.encoder = EncoderZinc(hidden_n=56)
             self.decoder = Decoder(input_size=56, hidden_n=56, output_feature_size=len(rules), max_seq_length=277)
+        elif model_name == 'eq_grammar':
+            self.encoder = Encoder()
+            self.decoder = Decoder()
+        else:
+            self.encoder = Encoder(channels=54, linear_mult=204)
+            self.decoder = Decoder(output_feature_size=54, max_seq_length=210)
 
     def forward(self, x):
         batch_size = x.size()[0]
