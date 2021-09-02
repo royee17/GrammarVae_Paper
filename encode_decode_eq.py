@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import torch
 from Network import GrammarVariationalAutoEncoder
-from zinc_grammar_model import EquationGrammarModel
+from grammar_models import EquationGrammarModel
 from math import *
 import argparse
 import os
