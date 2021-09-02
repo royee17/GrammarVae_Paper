@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from grammar import zinc_grammar as G
+from grammar import mol_grammar as G
 from torch.autograd import Variable
 
 class Decoder(nn.Module):
@@ -78,7 +78,6 @@ class EncoderZinc(nn.Module):
         self.conv_2 = nn.Conv1d(9, 10, kernel_size=9)
         self.conv_3 = nn.Conv1d(10, 11, kernel_size=11)
 
-        # self.fc_0 = nn.Linear(12 * 9, hidden_n)
         self.fc_0 = nn.Linear(2761, hidden_n)
         self.fc_mu = nn.Linear(hidden_n, hidden_n)
         self.fc_var = nn.Linear(hidden_n, hidden_n)
@@ -146,15 +145,14 @@ class GrammarVariationalAutoEncoder(nn.Module):
         super(GrammarVariationalAutoEncoder, self).__init__()
         if rules is None:
             rules = []
-        if model_name == 'zinc_grammar':
+        if model_name == 'mol_grammar':
             self.encoder = EncoderZinc(hidden_n=56)
             self.decoder = Decoder(input_size=56, hidden_n=56, output_feature_size=len(rules), max_seq_length=277)
         elif model_name == 'eq_grammar':
             self.encoder = Encoder()
             self.decoder = Decoder()
         else:
-            self.encoder = Encoder(channels=54, linear_mult=204)
-            self.decoder = Decoder(output_feature_size=54, max_seq_length=210)
+            raise ValueError('Not a known grammar!')
 
     def forward(self, x):
         batch_size = x.size()[0]
