@@ -1,34 +1,47 @@
 import numpy as np
 import nltk
-from nltk.corpus import treebank as tb
-from utils import many_one_hot
 import h5py
+import pandas as pd
+from grammar import mol_grammar
+from grammar_models import get_zinc_tokenizer
 
-# if __name__ == '__main__':
-data = [" ".join(sent) for sent in tb.sents() if len(" ".join(sent)) < 210]
-L = []
 
-chars = list(set(c.lower() for word in nltk.corpus.treebank.words() for c in word))
-chars.append(' ')
-DIM = len(chars)
+def make_molecule_ds():
+    df = pd.read_csv('qm9.csv')
+    L = df['smiles'].values.tolist()
 
-for line in data:
-    line = line.strip()
-    L.append(line)
+    MAX_LEN = 277
+    NCHARS = len(mol_grammar.GCFG.productions())
 
-count = 0
-MAX_LEN = 210
-OH = np.zeros((len(data), MAX_LEN, DIM))
-for chem in L:
-    indices = []
-    for c in chem:
-        indices.append(chars.index(c.lower()))
-    if len(indices) < MAX_LEN:
-        indices.extend((MAX_LEN-len(indices))*[DIM-1])
-    OH[count, :, :] = many_one_hot(np.array(indices), DIM)
-    count = count + 1
+    def to_one_hot(smiles):
+        """ Encode a list of smiles strings to one-hot vectors """
+        assert type(smiles) == list
+        prod_map = {}
+        for ix, prod in enumerate(mol_grammar.GCFG.productions()):
+            prod_map[prod] = ix
+        tokenize = get_zinc_tokenizer(mol_grammar.GCFG)
+        tokens = list(map(tokenize, smiles))
+        parser = nltk.ChartParser(mol_grammar.GCFG)
+        parse_trees = [next(parser.parse(t)) for t in tokens]
+        productions_seq = [tree.productions() for tree in parse_trees]
+        indices = [np.array([prod_map[prod] for prod in entry], dtype=int) for entry in productions_seq]
+        one_hot = np.zeros((len(indices), MAX_LEN, NCHARS), dtype=np.float32)
+        for i in range(len(indices)):
+            num_productions = len(indices[i])
+            one_hot[i][np.arange(num_productions), indices[i]] = 1.
+            one_hot[i][np.arange(num_productions, MAX_LEN), -1] = 1.
+        return one_hot
 
-h5f = h5py.File('innovative_dataset.h5','w')
-h5f.create_dataset('data', data=OH)
-# h5f.create_dataset('chr',  data=chars)
-h5f.close()
+    OH = np.zeros((len(L), MAX_LEN, NCHARS))
+    for i in range(0, len(L), 100):
+        print('Processing: i=[' + str(i) + ':' + str(i + 100) + ']')
+        onehot = to_one_hot(L[i:i + 100])
+        OH[i:i + 100, :, :] = onehot
+
+    h5f = h5py.File('qm9_grammar_dataset.h5', 'w')
+    h5f.create_dataset('data', data=OH)
+    h5f.close()
+
+
+if __name__ == '__main__':
+    make_molecule_ds()
