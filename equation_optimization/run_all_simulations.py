@@ -13,7 +13,7 @@ if __name__ == '__main__':
     args = get_arguments()
     simulations = args.num_of_simulations
     curr_dir = os.getcwd()
-    for num in range(2, simulations + 1):
+    for num in range(1, simulations + 1):
         print(f'############ running simulation number {num} ######################')
         os.chdir(curr_dir)
         simulation_path = f'simulation{num}/grammar/'

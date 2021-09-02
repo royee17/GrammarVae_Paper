@@ -59,8 +59,6 @@ if __name__ == '__main__':
             if min(scores) < best_value:
                 best_value = min(scores)
 
-        import numpy as np
-
         sum_values = 0
         count_values = 0
         for i in range(iteration):
