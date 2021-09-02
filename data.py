@@ -1,7 +1,7 @@
 import h5py
 import nltk
 import numpy as np
-from grammar import zinc_grammar
+from grammar import mol_grammar
 import grammar_models
 
 
@@ -18,10 +18,10 @@ def str_loader():
 def to_one_hot(smiles, max_len, n_chars, parser):
     """ Encode a list of smiles strings to one-hot vectors """
     assert type(smiles) == list
-    productions = zinc_grammar.GCFG.productions()
+    productions = mol_grammar.GCFG.productions()
     prod_map = {k: ix for ix, k in enumerate(productions)}
 
-    tokenize = grammar_models.get_zinc_tokenizer(zinc_grammar.GCFG)
+    tokenize = grammar_models.get_zinc_tokenizer(mol_grammar.GCFG)
     tokens = list(map(tokenize, smiles))
 
     parse_trees = [next(parser.parse(t)) for t in tokens]
@@ -46,8 +46,8 @@ def make_zinc_data_set():
     f.close()
 
     MAX_LEN = 277
-    NCHARS = len(zinc_grammar.GCFG.productions())
-    parser = nltk.ChartParser(zinc_grammar.GCFG)
+    NCHARS = len(mol_grammar.GCFG.productions())
+    parser = nltk.ChartParser(mol_grammar.GCFG)
 
     OH = np.zeros((len(L), MAX_LEN, NCHARS))
     for i in range(0, len(L), 1000):
