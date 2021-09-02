@@ -2,10 +2,11 @@ import h5py
 import numpy as np
 import argparse
 import torch.utils.data
+import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from Network import GrammarVariationalAutoEncoder, VAELoss
-from grammar import zinc_grammar as G
+from grammar import mol_grammar as G
 
 class ModelManager():
     def __init__(self, model, train_step_init=0, lr=1e-3):
@@ -60,19 +61,20 @@ class ModelManager():
         print(f'====> Test set loss: {test_loss}')
 
 
-def kfold_loader(data, k, s, e=None, is_train=True):
-    if not e:
-        e = k
-    with h5py.File(data, 'r') as h5f:
-        if 'zinc' in data:
-            if is_train:
-                result = h5f['data'][25000:100000:]
-            else:
-                result = h5f['data'][:25000:]
-            return torch.FloatTensor(result)
+def kfold_loader(data):
 
-        result = np.concatenate([h5f['data'][i::k] for i in range(s, e)])
-        return torch.FloatTensor(result)
+    with h5py.File(data, 'r') as h5f:
+        if 'zinc' in data or 'qm9' in data:
+            data_as_array = h5f['data'][:]
+            np.random.shuffle(data_as_array)
+            train = data_as_array[30000:90000:]
+            test = data_as_array[:25000:]
+            return torch.FloatTensor(train), torch.FloatTensor(test)
+
+        train = np.concatenate([h5f['data'][i::10] for i in range(1, 10)])
+        test = np.concatenate([h5f['data'][i::10] for i in range(0, 1)])
+
+        return torch.FloatTensor(train), torch.FloatTensor(test)
 
 
 def get_arguments():
@@ -95,24 +97,26 @@ if __name__ == '__main__':
 
     args = get_arguments()
 
-    epochs = args.epochs
+    epochs = 7#args.epochs
     batch_size = args.batch_size
+    data_type = 'qm9'
+    model_name = 'mol_grammar'#args.model_name#tb_innovative_grammar
 
-    data = args.data
+    data = 'data/qm9_grammar_dataset.h5'#'/Users/royeeguy/Desktop/school/year2/advanced_ML/hw/project/GrammarVae_Paper/data/zinc_grammar_dataset.h5'#args.data#data/innovative_dataset.h5
     rules = G.gram.split('\n')
 
+    train, test = kfold_loader(data)
+
     train_loader = torch.utils.data \
-        .DataLoader(kfold_loader(data, 10, 1, is_train=True),
-                    batch_size=batch_size, shuffle=True)
+        .DataLoader(train, batch_size=batch_size, shuffle=True)
 
     test_loader = torch.utils \
-        .data.DataLoader(kfold_loader(data, 10, 0, 1, is_train=False),
-                         batch_size=batch_size, shuffle=False)
+        .data.DataLoader(test, batch_size=batch_size, shuffle=False)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     losses = []
-    vae = GrammarVariationalAutoEncoder(model_name=args.model_name, rules=rules)
+    vae = GrammarVariationalAutoEncoder(model_name=model_name, rules=rules)
     vae.to(device)
 
     model_mgr = ModelManager(vae, lr=2e-3)
@@ -121,6 +125,6 @@ if __name__ == '__main__':
         print('epoch {} complete'.format(epoch))
         model_mgr.test(test_loader)
 
-    filepath = 'final_models/eq_grammar_dataset_L' + \
+    filepath = f'final_models/{data_type}_{model_name}_dataset_L' + \
         str(args.latent_dim) + '_E' + str(epochs) + '_val.hdf5'
     torch.save(model_mgr.model.state_dict(), filepath)
