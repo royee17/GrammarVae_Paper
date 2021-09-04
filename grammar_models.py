@@ -1,32 +1,14 @@
+import sys
+sys.path.insert(0, '../../')
+
 import re
 import nltk
 import torch
 import numpy as np
-from grammar import zinc_grammar, eq_grammar
+import selfies as sf
+from grammar import mol_grammar, eq_grammar
+from data import utils
 
-import sys
-sys.path.insert(0, '../../')
-
-def get_zinc_tokenizer(cfg):
-    long_tokens = list(filter(lambda a: len(a) > 1, cfg._lexical_index.keys()))
-    replacements = ['$', '%', '^']  # ,'&']
-    assert len(long_tokens) == len(replacements)
-    for token in replacements:
-        assert not token in cfg._lexical_index
-
-    def tokenize(smiles):
-        for i, token in enumerate(long_tokens):
-            smiles = smiles.replace(token, replacements[i])
-        tokens = []
-        for token in smiles:
-            try:
-                ix = replacements.index(token)
-                tokens.append(long_tokens[ix])
-            except:
-                tokens.append(token)
-        return tokens
-
-    return tokenize
 
 
 def pop_or_nothing(S):
@@ -55,24 +37,24 @@ class ZincGrammarModel(object):
 
     def __init__(self, vae_model):
         """ Load the (trained) zinc encoder/decoder, grammar model. """
-        self._grammar = zinc_grammar
+        self._grammar = mol_grammar
         self.MAX_LEN = 277
         self._productions = self._grammar.GCFG.productions()
         self._prod_map = {}
         for ix, prod in enumerate(self._productions):
             self._prod_map[prod] = ix
         self._parser = nltk.ChartParser(self._grammar.GCFG)
-        self._tokenize = get_zinc_tokenizer(self._grammar.GCFG)
+        self._tokenize = utils.get_zinc_tokenizer(self._grammar.GCFG)
         self._n_chars = len(self._productions)
         self._lhs_map = {}
         for ix, lhs in enumerate(self._grammar.lhs_list):
             self._lhs_map[lhs] = ix
         self.vae = vae_model
 
-    def encode(self, smiles):
-        """ Encode a list of smiles strings into the latent space """
-        assert type(smiles) == list
-        tokens = map(self._tokenize, smiles)
+    def encode(self, str_list):
+        """ Encode a list of strings into the latent space """
+        assert type(str_list) == list
+        tokens = list(map(self._tokenize, str_list))
         parse_trees = [next(self._parser.parse(t)) for t in tokens]
         productions_seq = [tree.productions() for tree in parse_trees]
         indices = [np.array([self._prod_map[prod] for prod in entry], dtype=int)
@@ -132,7 +114,6 @@ class ZincGrammarModel(object):
         return [prods_to_eq(prods) for prods in prod_seq]
 
 
-
 def tokenize(s):
     funcs = ['sin', 'exp']
     for fn in funcs: s = s.replace(fn+'(', fn+' ')
@@ -159,3 +140,37 @@ class EquationGrammarModel(ZincGrammarModel):
             self._lhs_map[lhs] = ix
 
         self.vae = vae_model
+
+
+
+
+
+class InnovativeGrammarModel(ZincGrammarModel):
+
+    def __init__(self, vae_model):
+        """ Load the (trained) encoder/decoder, grammar model. """
+        super().__init__(vae_model)
+        self.selfies_alphabet = utils.load_alphabet(path='/Users/royeeguy/Desktop/school/year2/advanced_ML/hw/project/project_code/GrammarVae_Paper/data/selfie_alphabet.txt')
+
+    def encode(self, str_list):
+        """ Encode a list of strings into the latent space """
+        self.one_hot = utils.selfies_to_one_hot(str_list, selfies_alphabet=self.selfies_alphabet, largest_selfies_len=72)
+        return self.vae.encoder(torch.from_numpy(self.one_hot).float())[0]
+
+    def decode(self, z):
+        """ Sample from the grammar decoder """
+        assert z.ndim == 2
+        batch_size = z.shape[0]
+        z = z if torch.is_tensor(z) else torch.from_numpy(z)
+        z = z.float()
+        h1, h2, h3 = self.vae.decoder.init_hidden(batch_size)
+        unmasked, _, _, _ = self.vae.decoder(z, h1, h2, h3)
+
+        encoded_selfies = utils.hot_to_smile(unmasked, self.selfies_alphabet)
+        decoded_smiles = []
+        for selfie in encoded_selfies:
+            smiles = sf.decoder(selfie)
+            decoded_smiles.append(smiles)
+
+        return decoded_smiles
+
