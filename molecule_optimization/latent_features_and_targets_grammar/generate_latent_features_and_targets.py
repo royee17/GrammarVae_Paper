@@ -8,7 +8,7 @@ import numpy as np
 from rdkit.Chem import MolFromSmiles, MolToSmiles
 import networkx as nx
 from Network import GrammarVariationalAutoEncoder
-from grammar_models import ZincGrammarModel
+from grammar_models import ZincGrammarModel, InnovativeGrammarModel
 import torch
 import pandas as pd
 import argparse
@@ -17,7 +17,7 @@ from grammar import mol_grammar as G
 def get_arguments():
     parser = argparse.ArgumentParser(
         description='Molecular autoencoder network')
-    parser.add_argument('--model_name', type=str, metavar='N', default="zinc_grammar_dataset_L56_E5_val.hdf5")
+    parser.add_argument('--model_name', type=str, metavar='N', default="zinc_selfie_mol_grammar_selfie_dataset_L56_E7_val.hdf5")
     parser.add_argument('--model_type', type=str, metavar='N', default="zinc")
     return parser.parse_args()
 
@@ -25,15 +25,15 @@ if __name__ == '__main__':
 
     args = get_arguments()
 
-    model_type = 'qm9'#args.model_type
+    model_type = args.model_type
 
-    model_name = 'qm9_mol_grammar_dataset_L56_E7_val.hdf5'#args.model_name
+    model_name = args.model_name
     model_path = os.path.join('..', '..', 'final_models', args.model_name)
     rules = G.gram.split('\n')
 
-    final_model = GrammarVariationalAutoEncoder(model_name='mol_grammar', rules=rules)
+    final_model = GrammarVariationalAutoEncoder(model_name='mol_grammar_selfie', rules=rules)
     final_model.load_state_dict(torch.load(model_path))
-    grammar_model = ZincGrammarModel(final_model)
+    grammar_model = InnovativeGrammarModel(final_model)
 
     if model_type == 'zinc':
 

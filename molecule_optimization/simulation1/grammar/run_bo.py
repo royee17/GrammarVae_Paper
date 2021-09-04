@@ -9,7 +9,7 @@ import argparse
 import collections
 import os
 from Network import GrammarVariationalAutoEncoder
-from grammar_models import ZincGrammarModel
+from grammar_models import ZincGrammarModel, InnovativeGrammarModel
 from rdkit.Chem import Descriptors
 from rdkit.Chem import MolFromSmiles, MolToSmiles
 import sascorer
@@ -28,7 +28,7 @@ def get_arguments():
 
 def decode_from_latent_space(latent_points, grammar_model):
 
-    decode_attempts = 50
+    decode_attempts = 500
     decoded_molecules = []
     for i in range(decode_attempts):
         current_decoded_molecules = grammar_model.decode(latent_points)
@@ -113,11 +113,11 @@ if __name__ == '__main__':
     y_test = y[ permutation ][ np.int(np.round(0.9 * n)) : ]
 
     model_name = args.model_name
-    model_path = os.path.join('..', '..', '..', 'final_models', args.model_name)
+    model_path = os.path.join('..', '..', '..', 'final_models', model_name)
     rules = G.gram.split('\n')
     TestLL = []
     RMSE = []
-    for iteration in range(2):
+    for iteration in range(10):
 
         # We fit the GP
 
@@ -141,9 +141,9 @@ if __name__ == '__main__':
         print(f'Train RMSE: {error}')
         print(f'Train ll: {trainll}')
 
-        final_model = GrammarVariationalAutoEncoder(model_name='mol_grammar', rules=rules)
+        final_model = GrammarVariationalAutoEncoder(model_name='mol_grammar_selfie', rules=rules)
         final_model.load_state_dict(torch.load(model_path))
-        grammar_model = ZincGrammarModel(final_model)
+        grammar_model = InnovativeGrammarModel(final_model)
 
         # We pick the next 50 inputs
         next_inputs = sgp.batched_greedy_ei(50, np.min(X_train, 0), np.max(X_train, 0))

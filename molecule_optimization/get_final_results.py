@@ -32,8 +32,8 @@ def load_object(filename):
 # We compute the average statistics for the grammar autoencoder
 
 if __name__ == '__main__':
-    n_simulations = 4
-    iteration = 2
+    n_simulations = 10
+    iteration = 10
     character_results = False
 
     results_grammar = np.zeros((n_simulations, 3))
