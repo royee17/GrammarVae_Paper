@@ -71,14 +71,14 @@ class Encoder(nn.Module):
 
 
 class EncoderZinc(nn.Module):
-    def __init__(self, hidden_n=100):
+    def __init__(self, hidden_n=100, input_channels=76, linear_input=2761):
         super(EncoderZinc, self).__init__()
 
-        self.conv_1 = nn.Conv1d(76,9, kernel_size=9)
+        self.conv_1 = nn.Conv1d(input_channels, 9, kernel_size=9)
         self.conv_2 = nn.Conv1d(9, 10, kernel_size=9)
         self.conv_3 = nn.Conv1d(10, 11, kernel_size=11)
 
-        self.fc_0 = nn.Linear(2761, hidden_n)
+        self.fc_0 = nn.Linear(linear_input, hidden_n)
         self.fc_mu = nn.Linear(hidden_n, hidden_n)
         self.fc_var = nn.Linear(hidden_n, hidden_n)
 
@@ -151,6 +151,9 @@ class GrammarVariationalAutoEncoder(nn.Module):
         elif model_name == 'eq_grammar':
             self.encoder = Encoder()
             self.decoder = Decoder()
+        elif model_name == 'mol_grammar_selfie':
+            self.encoder = EncoderZinc(hidden_n=56, input_channels=100, linear_input=506)
+            self.decoder = Decoder(input_size=56, hidden_n=56, output_feature_size=100, max_seq_length=72)
         else:
             raise ValueError('Not a known grammar!')
 
