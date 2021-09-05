@@ -6,8 +6,10 @@ An implementation of the Grammar VAE Paper and new architecture to improve resul
 
 ### Molecules
 
-To train the model:
+If data does not exist, run:
+* `data\make_innovative_dataset.py`
 
+To train the model:
 * `python grammar_vae.py` % the grammar model
 
 attributes:
@@ -15,7 +17,8 @@ attributes:
 * `--batch_size` % batch size
 * `--latent_dim` % size of latent space vector
 * `--data` % data set name
-* `--model_name` % model name
+* `--model_name` % model name 
+* `--data_type` % model name
 
 Example:
 * `python grammar_vae.py --latent_dim=56 --epochs=50` % train a model with a 56D latent space and 50 epochs
@@ -30,19 +33,19 @@ The experiments with molecules require the rdkit library, which can be installed
 
 1 - To generate the latent representations, go to:
 
-`equation_optimization/latent_features_and_targets_grammar/`
+`equation_optimization/latent_features_and_targets_grammar/` or `molecule_optimization/latent_features_and_targets_grammar/`
 
 and run:
 * `python generate_latent_features_and_targets.py`
 
 2 - To run all simulations go to:
-`equation_optimization/`
+`equation_optimization/` or `molecule_optimization/`
 and run:
 * `python run_all_simulations.py`
 
 3 - Extract the final results by going to:
 
-`equation_optimization/`
+`equation_optimization/` or `molecule_optimization/`
 
 and run:
 * `python get_final_results.py`
