@@ -4,8 +4,6 @@ An implementation of the Grammar VAE Paper and new architecture to improve resul
 
 ## Training
 
-### Molecules
-
 If data does not exist, run:
 * `data\make_innovative_dataset.py`
 
