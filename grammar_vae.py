@@ -67,7 +67,7 @@ def kfold_loader(data):
         if 'zinc' in data or 'qm9' in data:
             data_as_array = h5f['data'][:]
             np.random.shuffle(data_as_array)
-            train = data_as_array[30000:90000:]
+            train = data_as_array[25000::]
             test = data_as_array[:25000:]
             return torch.FloatTensor(train), torch.FloatTensor(test)
 
@@ -80,7 +80,7 @@ def kfold_loader(data):
 def get_arguments():
     parser = argparse.ArgumentParser(
         description='Molecular autoencoder network')
-    parser.add_argument('--model_name', type=str, metavar='N', default="eq_grammar")
+    parser.add_argument('--model_name', type=str, metavar='N', default="mol_grammar_selfie")
     parser.add_argument('--epochs', type=int, metavar='N', default=50,
                         help='Number of epochs to run during training.')
     parser.add_argument('--batch_size', type=int, metavar='N', default=700,
@@ -88,8 +88,11 @@ def get_arguments():
     parser.add_argument('--latent_dim', type=int, metavar='N', default=56,
                         help='Dimensionality of the latent representation.')
     parser.add_argument('--data', type=str, metavar='N',
-                        default="data/eq_grammar_dataset.h5",
+                        default="data/zinc_selfie_grammar_dataset.h5",
                         help='data set file')
+    parser.add_argument('--data_type', type=str, metavar='N',
+                        default="zinc",
+                        help='data set name')
     return parser.parse_args()
 
 
@@ -97,12 +100,12 @@ if __name__ == '__main__':
 
     args = get_arguments()
 
-    epochs = 7#args.epochs
+    epochs = args.epochs
     batch_size = args.batch_size
-    data_type = 'qm9'
-    model_name = 'mol_grammar'#args.model_name#tb_innovative_grammar
+    data_type = args.data_type
+    model_name = args.model_name
 
-    data = 'data/qm9_grammar_dataset.h5'#'/Users/royeeguy/Desktop/school/year2/advanced_ML/hw/project/GrammarVae_Paper/data/zinc_grammar_dataset.h5'#args.data#data/innovative_dataset.h5
+    data = args.data
     rules = G.gram.split('\n')
 
     train, test = kfold_loader(data)
@@ -125,6 +128,6 @@ if __name__ == '__main__':
         print('epoch {} complete'.format(epoch))
         model_mgr.test(test_loader)
 
-    filepath = f'final_models/{data_type}_{model_name}_dataset_L' + \
+    filepath = f'final_models/{data_type}_selfie_{model_name}_dataset_L' + \
         str(args.latent_dim) + '_E' + str(epochs) + '_val.hdf5'
     torch.save(model_mgr.model.state_dict(), filepath)
